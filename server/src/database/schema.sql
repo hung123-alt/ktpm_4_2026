@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS movies (
   status          ENUM('ongoing', 'completed', 'upcoming') NOT NULL DEFAULT 'ongoing',
   release_year    INT NULL,
   total_episodes  INT NOT NULL DEFAULT 0,
-  view_count      INT NOT NULL DEFAULT 0,
+  view_count      INT NOT NULL DEFAULT 0,ok
   avg_rating      DECIMAL(3,1) NOT NULL DEFAULT 0,
   rating_count    INT NOT NULL DEFAULT 0,
   is_featured     BOOLEAN NOT NULL DEFAULT FALSE,
