@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // baseURL đọc từ biến môi trường (file .env), fallback về localhost khi dev.
 // ⚠️ Vite dùng import.meta.env.VITE_... (KHÔNG phải process.env.REACT_APP_ như CRA)
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const baseURL = 'https://congenial-space-disco-wrgj9g9jqxwqc97w5-3000.app.github.dev/api';
 
 const axiosClient = axios.create({
   baseURL,

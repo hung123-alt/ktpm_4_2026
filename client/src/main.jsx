@@ -1,14 +1,18 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import AppProviders from './providers/AppProviders';
+import { BrowserRouter } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './index.css';
 import App from './App.jsx';
-import './styles/index.css';   // hoặc './index.css' tùy bạn để CSS ở đâu
-import { reportWebVitals } from './shared/utils/reportWebVitals';
+import AppProviders from './providers/AppProviders'; // Đảm bảo đã import
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <BrowserRouter>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </BrowserRouter>
   </StrictMode>
 );
-reportWebVitals(console.log); // in chỉ số ra Console (F12) để xem
