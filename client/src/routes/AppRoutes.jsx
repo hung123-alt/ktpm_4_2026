@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
 //import ProtectedRoute from './ProtectedRoute';
 //import AdminRoute from './AdminRoute';
 
@@ -8,14 +8,14 @@ import { Routes, Route } from 'react-router-dom';
 // ============================================================
 
 // --- Trang công khai (không cần đăng nhập) ---
-const HomePage = lazy(() => import('../features/movies/pages/HomePage'));
+const HomePage = lazy(() => import("../features/movies/pages/HomePage"));
 // const MovieDetailPage = lazy(() => import('../features/movies/pages/MovieDetailPage'));
 // const FilterPage = lazy(() => import('../features/movies/pages/FilterPage'));
 // const RandomPage = lazy(() => import('../features/movies/pages/RandomPage'));
 
 // --- Trang xác thực ---
-// const LoginPage = lazy(() => import('../features/auth/pages/LoginPage'));
-// const RegisterPage = lazy(() => import('../features/auth/pages/RegisterPage'));
+const LoginPage = lazy(() => import('../features/auth/pages/LoginPage'));
+const RegisterPage = lazy(() => import("../features/auth/pages/RegisterPage"));
 // const ForgotPasswordPage = lazy(() => import('../features/auth/pages/ForgotPasswordPage'));
 // const ResetPasswordPage = lazy(() => import('../features/auth/pages/ResetPasswordPage'));
 
@@ -34,7 +34,11 @@ const HomePage = lazy(() => import('../features/movies/pages/HomePage'));
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Đang tải...</div>}>
+    <Suspense
+      fallback={
+        <div style={{ padding: 40, textAlign: "center" }}>Đang tải...</div>
+      }
+    >
       <Routes>
         {/* ===== Công khai ===== */}
         <Route path="/" element={<HomePage />} />
@@ -43,8 +47,8 @@ export default function AppRoutes() {
         {/* <Route path="/random" element={<RandomPage />} /> */}
 
         {/* ===== Xác thực ===== */}
-        {/* <Route path="/login" element={<LoginPage />} /> */}
-        {/* <Route path="/register" element={<RegisterPage />} /> */}
+        {<Route path="/login" element={<LoginPage />} />}
+        <Route path="/register" element={<RegisterPage />} />
         {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
         {/* <Route path="/reset-password" element={<ResetPasswordPage />} /> */}
 
