@@ -18,26 +18,30 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/enums/user-role.enum';
+
 @Controller('movies')
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   create(@Body() createMovieDto: CreateMovieDto) {
     return this.moviesService.create(createMovieDto);
   }
+
   @Get()
-  findAll() {
-    return this.moviesService.findAll();
+  findAll(@Query('keyword') keyword?: string) {
+    return this.moviesService.findAll(keyword);
   }
+
+  // SỬA Ở ĐÂY: Route theo slug đã được đổi thành /movies/slug/:slug
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.moviesService.findBySlug(slug);
   }
 
-  // ⚠️ Tất cả route TĨNH (random, filter) PHẢI đặt TRƯỚC @Get(':id')
-  // nếu không NestJS sẽ hiểu "random"/"filter" là 1 giá trị :id → gọi nhầm findOne
+  // Các route TĨNH (random, filter) đặt TRƯỚC @Get(':id')
   @Get('random')
   getRandomOne() {
     return this.moviesService.getRandomOne();
@@ -53,16 +57,19 @@ export class MoviesController {
     return this.moviesService.filterMovies(filters);
   }
 
+  // Route động tìm theo ID đặt cuối cùng
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.moviesService.findOne(+id);
   }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
     return this.moviesService.update(+id, updateMovieDto);
   }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

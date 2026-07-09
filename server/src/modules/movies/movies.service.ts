@@ -23,11 +23,18 @@ export class MoviesService {
     return saved;
   }
   // Danh sách phim đang hiển thị (public)
-  async findAll(): Promise<Movie[]> {
-    return this.movieRepository.find({
-      where: { isVisible: true },
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(keyword?: string): Promise<Movie[]> {
+    const qb = this.movieRepository.createQueryBuilder('movie')
+      .where('movie.isVisible = :visible', { visible: true });
+
+    if (keyword) {
+      qb.andWhere(
+        '(LOWER(movie.title) LIKE LOWER(:kw) OR LOWER(movie.description) LIKE LOWER(:kw))',
+        { kw: `%${keyword}%` }
+      );
+    }
+
+    return qb.orderBy('movie.createdAt', 'DESC').getMany();
   }
   // Chi tiết phim theo id
   async findOne(id: number): Promise<Movie> {
@@ -39,8 +46,15 @@ export class MoviesService {
     return movie;
   }
   // Chi tiết phim theo slug (public) — tăng lượt xem
+  // Chi tiết phim theo slug (public) — tăng lượt xem
   async findBySlug(slug: string): Promise<Movie> {
-    const movie = await this.movieRepository.findOne({ where: { slug } });
+    const movie = await this.movieRepository.findOne({
+      where: { slug },
+      relations: {
+        genres: true,
+        countries: true,
+      }, // ✅ THÊM DÒNG NÀY ĐỂ LẤY THỂ LOẠI & QUỐC GIA
+    });
     if (!movie) {
       this.logger.warn(`Không tìm thấy phim slug=${slug}`);
       throw new NotFoundException(`Không tìm thấy phim: ${slug}`);
@@ -114,13 +128,13 @@ export class MoviesService {
 
     if (movies.length === 0) {
       this.logger.warn(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Random nâng cao: không có phim thỏa điều kiện (type=${type}, status=${status}, genreIds=${genreIds})`,
       );
     }
 
     return this.sortByCriteria(movies, sortBy);
   }
-
   private sortByCriteria(movies: Movie[], sortBy: string): Movie[] {
     const sorted = [...movies];
     switch (sortBy) {
