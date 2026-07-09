@@ -1,36 +1,31 @@
 import axiosClient from '../../../lib/axiosClient';
 
-// ============================================================
-// moviesApi — các hàm gọi API THUẦN cho phim.
-// (axiosClient đã bóc .data → kết quả trả về đã là data)
-// ============================================================
-
 export const moviesApi = {
-  // GET /movies — danh sách phim (có thể kèm query params phân trang)
+  // GET /movies
   getAll: (params) => axiosClient.get('/movies', { params }),
 
-  // GET /movies/:slug — chi tiết 1 phim theo slug
-  getBySlug: (slug) => axiosClient.get(`/movies/${slug}`),
+  // GET /movies/slug/:slug
+  getBySlug: (slug) => axiosClient.get(`/movies/slug/${slug}`),
 
-  // GET /movies/filter — bộ lọc phim
-  // params: { countryId, type, genreIds, releaseYear, sortBy, page, limit }
-  filter: (params) => axiosClient.get('/movies/filter', { params }),
+  // ✅ SỬA LẠI HÀM FILTER: Thêm paramsSerializer để Axios gửi mảng đúng chuẩn Backend
+  filter: (params) => axiosClient.get('/movies/filter', { 
+    params,
+    paramsSerializer: {
+      indexes: null // Giúp gửi genreIds=1 thay vì genreIds[]=1
+    }
+  }),
 
-  // GET /movies/random — random nhanh, 1 phim ngẫu nhiên
+  // GET /movies/random
   getRandom: () => axiosClient.get('/movies/random'),
 
-  // GET /movies/random/advanced — random nâng cao theo bộ lọc
-  // params: { type, status, genreIds, limit, sortBy }
-  getRandomAdvanced: (params) => axiosClient.get('/movies/random/advanced', { params }),
+  // GET /movies/random/advanced
+  getRandomAdvanced: (params) => axiosClient.get('/movies/random/advanced', { 
+    params,
+    paramsSerializer: { indexes: null } 
+  }),
 
-  // --- Các hàm dành cho ADMIN (cần JWT + role admin) ---
-
-  // POST /movies — tạo phim mới
+  // --- ADMIN ---
   create: (payload) => axiosClient.post('/movies', payload),
-
-  // PATCH /movies/:id — cập nhật phim
   update: (id, payload) => axiosClient.patch(`/movies/${id}`, payload),
-
-  // DELETE /movies/:id — xóa phim
   remove: (id) => axiosClient.delete(`/movies/${id}`),
 };
