@@ -1,4 +1,11 @@
-import { Entity, PrimaryColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  CreateDateColumn,
+  JoinColumn,
+  ManyToOne,
+} from 'typeorm';
+import { Movie } from '../movies/movies.entity';
 
 @Entity('watchlist')
 export class Watchlist {
@@ -11,4 +18,7 @@ export class Watchlist {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+  @ManyToOne(() => Movie)
+  @JoinColumn({ name: 'movie_id' })
+  movie: Movie;
 }

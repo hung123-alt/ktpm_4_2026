@@ -33,6 +33,7 @@ export class FavoritesService {
   async findByUser(userId: number): Promise<Favorite[]> {
     return this.favoriteRepository.find({
       where: { userId },
+      relations: { movie: true }, // ✅ Cú pháp chuẩn cho TypeORM mới // ✅ THÊM DÒNG NÀY ĐỂ LẤY THÔNG TIN PHIM
       order: { createdAt: 'DESC' },
     });
   }

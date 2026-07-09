@@ -36,6 +36,10 @@ export class WatchHistoryService {
   async findByUser(userId: number): Promise<WatchHistory[]> {
     return this.historyRepository.find({
       where: { userId },
+      relations: {
+        movie: true,
+        episode: true,
+      },
       order: { watchedAt: 'DESC' },
     });
   }

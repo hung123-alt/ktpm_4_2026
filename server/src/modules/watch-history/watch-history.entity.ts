@@ -4,7 +4,11 @@ import {
   Column,
   UpdateDateColumn,
   Unique,
+  JoinColumn,
+  ManyToOne,
 } from 'typeorm';
+import { Movie } from '../movies/movies.entity';
+import { Episode } from '../episodes/episode.entity';
 
 @Entity('watch_history')
 @Unique(['userId', 'episodeId'])
@@ -27,4 +31,11 @@ export class WatchHistory {
   // Schema dùng tên cột watched_at (KHÔNG phải last_watched_at)
   @UpdateDateColumn({ name: 'watched_at' })
   watchedAt: Date;
+  @ManyToOne(() => Movie)
+  @JoinColumn({ name: 'movie_id' })
+  movie: Movie;
+
+  @ManyToOne(() => Episode)
+  @JoinColumn({ name: 'episode_id' })
+  episode: Episode;
 }

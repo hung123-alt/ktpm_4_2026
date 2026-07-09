@@ -24,13 +24,14 @@ export class MoviesService {
   }
   // Danh sách phim đang hiển thị (public)
   async findAll(keyword?: string): Promise<Movie[]> {
-    const qb = this.movieRepository.createQueryBuilder('movie')
+    const qb = this.movieRepository
+      .createQueryBuilder('movie')
       .where('movie.isVisible = :visible', { visible: true });
 
     if (keyword) {
       qb.andWhere(
         '(LOWER(movie.title) LIKE LOWER(:kw) OR LOWER(movie.description) LIKE LOWER(:kw))',
-        { kw: `%${keyword}%` }
+        { kw: `%${keyword}%` },
       );
     }
 

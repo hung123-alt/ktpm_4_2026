@@ -1,4 +1,11 @@
-import { Entity, PrimaryColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Movie } from '../movies/movies.entity'; // ✅ Import class Movie (viết hoa)
 
 @Entity('favorites')
 export class Favorite {
@@ -11,4 +18,9 @@ export class Favorite {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  // ✅ Khai báo quan hệ đúng chuẩn
+  @ManyToOne(() => Movie)
+  @JoinColumn({ name: 'movie_id' })
+  movie: Movie;
 }
