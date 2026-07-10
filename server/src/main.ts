@@ -2,6 +2,10 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import compression from 'compression';
 import { AppModule } from './app.module';
+import * as dns from 'dns'; // ✅ THÊM DÒNG IMPORT NÀY
+
+// ✅ THÊM DÒNG NÀY ĐỂ ÉP NODE.JS DÙNG IPV4 TRƯỚC KHI KHỞI ĐỘNG APP
+dns.setDefaultResultOrder('ipv4first');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
