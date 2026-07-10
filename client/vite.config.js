@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://ktpm-4-2026.onrender.com',
         changeOrigin: true,
       }
     }

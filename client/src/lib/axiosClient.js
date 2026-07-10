@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // baseURL đọc từ biến môi trường (file .env), fallback về localhost khi dev.
 // ⚠️ Vite dùng import.meta.env.VITE_... (KHÔNG phải process.env.REACT_APP_ như CRA)
-const baseURL = 'https://redesigned-train-g47w575wvpqxhv594-8000.app.github.dev/api';
+const baseURL = import.meta.env.VITE_API_URL || 'link_codespaces'
 
 const axiosClient = axios.create({
   baseURL,
