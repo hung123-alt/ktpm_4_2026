@@ -3,9 +3,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ErrorType } from '../../common/enums/error-type.enum';
 import { ReportStatus } from '../../common/enums/report-status.enum';
+import { User } from '../users/user.entity';
+import { Movie } from '../movies/movies.entity';
 
 @Entity('error_reports')
 export class ErrorReport {
@@ -37,5 +41,11 @@ export class ErrorReport {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  // Schema KHÔNG có updated_at → bỏ @UpdateDateColumn
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @ManyToOne(() => Movie)
+  @JoinColumn({ name: 'movie_id' })
+  movie: Movie;
 }

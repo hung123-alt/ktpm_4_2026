@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsInt,
+  IsNumber,
   IsEnum,
   IsBoolean,
   MaxLength,
@@ -42,7 +43,20 @@ export class CreateMovieDto {
   @IsOptional()
   releaseYear?: number;
 
+  // ✅ THÊM 3 TRƯỜNG NÀY
+  @IsInt()
+  @IsOptional()
+  totalEpisodes?: number;
+
+  @IsNumber()
+  @IsOptional()
+  avgRating?: number;
+
   @IsBoolean()
   @IsOptional()
   isFeatured?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isVisible?: boolean;
 }

@@ -30,6 +30,7 @@ export class ErrorReportsService {
   async findByUser(userId: number): Promise<ErrorReport[]> {
     return this.reportRepository.find({
       where: { userId },
+      relations: { user: true, movie: true },
       order: { createdAt: 'DESC' },
     });
   }

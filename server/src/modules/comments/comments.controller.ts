@@ -34,11 +34,20 @@ export class CommentsController {
     return this.commentsService.findByMovie(+movieId);
   }
 
-  // DELETE /comments/:id — Xóa bình luận của mình (cần login)
+  // GET /comments — Admin lấy tất cả bình luận
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findAll() {
+    return this.commentsService.findAll();
+  }
+
+  // DELETE /comments/:id — Xóa bình luận (cần login)
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.commentsService.remove(+id, user.id);
+    // ✅ Truyền thêm user.role xuống service
+    return this.commentsService.remove(+id, user.id, user.role);
   }
 
   // PATCH /comments/:id/hide — Ẩn/hiện bình luận (admin)

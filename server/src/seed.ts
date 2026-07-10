@@ -49,6 +49,7 @@ interface VsmovCountry {
 }
 
 interface VsmovEpisodeItem {
+  link_m3u8: string;
   name: string;
   slug: string;
   filename: string;
@@ -89,6 +90,7 @@ interface VsmovListResponse {
 interface VsmovDetailResponse {
   status: boolean;
   movie: VsmovMovieDetail | null;
+  episodes: VsmovServer[];
 }
 
 interface GenreRow extends RowDataPacket {
@@ -203,13 +205,13 @@ async function fetchList(): Promise<VsmovListItem[]> {
 // LẤY CHI TIẾT 1 PHIM
 // ============================================================
 
-async function fetchDetail(slug: string): Promise<VsmovMovieDetail | null> {
+async function fetchDetail(slug: string): Promise<VsmovDetailResponse | null> {
   try {
     const { data } = await axios.get<VsmovDetailResponse>(
       `${VSMOV}/phim/${slug}`,
       { headers: { Accept: 'application/json' }, timeout: 15000 },
     );
-    return data?.movie ?? null;
+    return data; // ✅ TRẢ VỀ TOÀN BỘ DATA (bao gồm movie và episodes)
   } catch {
     return null;
   }
@@ -268,16 +270,20 @@ async function main(): Promise<void> {
     }
 
     // Lấy chi tiết phim
-    const detail = await fetchDetail(item.slug);
-    if (!detail) {
+    const detailResponse = await fetchDetail(item.slug);
+    if (!detailResponse || !detailResponse.movie) {
       skipped++;
       continue;
     }
 
+    const detail = detailResponse.movie; // ✅ Lấy thông tin phim
+    const episodes = Array.isArray(detailResponse.episodes)
+      ? detailResponse.episodes
+      : [];
+
     // Bảo vệ trước dữ liệu API không đồng nhất
     const categories = Array.isArray(detail.category) ? detail.category : [];
     const countries = Array.isArray(detail.country) ? detail.country : [];
-    const episodes = Array.isArray(detail.episodes) ? detail.episodes : [];
 
     // Tạo mảng slug thể loại (dùng để detect type)
     const catSlugs: string[] = categories.map((c) => c.slug);
@@ -373,46 +379,49 @@ async function main(): Promise<void> {
       }
     }
 
-        // Insert TẬP PHIM — embed_url NOT NULL
-    let realEpisodesInserted = 0;
-
+    // Insert TẬP PHIM — Lấy link thật từ VSMOV API
     if (episodes.length > 0) {
-      const firstServer = episodes[0];
-      const serverData = Array.isArray(firstServer?.server_data)
-        ? firstServer.server_data
-        : [];
-      const serverName = firstServer?.server_name?.trim() || 'Server 1';
+      // Quét qua tất cả server (vd: Server 1, Server VIP...)
+      for (const server of episodes) {
+        const serverData = Array.isArray(server?.server_data)
+          ? server.server_data
+          : [];
+        const serverName = server?.server_name?.trim() || 'Server 1';
 
-      for (const ep of serverData) {
-        if (!ep.link_embed) continue;
+        for (const ep of serverData) {
+          // Ưu tiên link_embed, nếu không có thì lấy link_m3u8
+          const linkToSave = ep.link_embed || ep.link_m3u8;
+          if (!linkToSave) continue;
 
-        const numMatch = (ep.filename || ep.name || '').match(/\d+/);
-        const epNum = numMatch ? parseInt(numMatch[0]) : 0;
-        if (epNum <= 0) continue;
+          // Bóc tách số tập từ filename hoặc name
+          let epNum = 0;
+          const numMatch = (ep.filename || ep.name || '').match(/\d+/);
+          if (numMatch) {
+            epNum = parseInt(numMatch[0]);
+          }
 
-        await conn.execute(
-          `INSERT IGNORE INTO episodes
-            (movie_id, episode_number, title, embed_url, server_name, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-          [movieId, epNum, ep.filename || `Tập ${epNum}`, ep.link_embed, serverName],
-        );
-        realEpisodesInserted++;
-        insertedEpisodes++;
-      }
-    }
+          // Nếu không tìm thấy số, dùng index làm số tập
+          if (epNum <= 0) {
+            epNum = serverData.indexOf(ep) + 1;
+          }
 
-    // ✅ FALLBACK: Nếu API không có link embed, tạo tập ảo để test Frontend
-    if (realEpisodesInserted === 0 && totalEp > 0) {
-      const dummyLink = 'https://www.youtube.com/embed/oqxAJKy0ii4'; // Link test
-      const limit = Math.min(totalEp, 10); // Tạo tối đa 10 tập để test
-      for (let i = 1; i <= limit; i++) {
-        await conn.execute(
-          `INSERT IGNORE INTO episodes
-            (movie_id, episode_number, title, embed_url, server_name, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
-          [movieId, i, `Tập ${i}`, dummyLink, 'Server 1'],
-        );
-        insertedEpisodes++;
+          if (epNum <= 0) continue;
+
+          // Dùng INSERT IGNORE để nếu quét server 2 bị trùng tập với server 1 thì nó không báo lỗi
+          await conn.execute(
+            `INSERT IGNORE INTO episodes
+              (movie_id, episode_number, title, embed_url, server_name, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+            [
+              movieId,
+              epNum,
+              ep.filename || `Tập ${epNum}`,
+              linkToSave,
+              serverName,
+            ],
+          );
+          insertedEpisodes++;
+        }
       }
     }
 

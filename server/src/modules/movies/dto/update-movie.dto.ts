@@ -2,6 +2,7 @@ import {
   IsString,
   IsOptional,
   IsInt,
+  IsNumber,
   IsEnum,
   IsBoolean,
   MaxLength,
@@ -41,6 +42,15 @@ export class UpdateMovieDto {
   @IsOptional()
   @IsInt()
   releaseYear?: number;
+
+  // ✅ THÊM 2 TRƯỜNG NÀY
+  @IsOptional()
+  @IsInt()
+  totalEpisodes?: number;
+
+  @IsOptional()
+  @IsNumber()
+  avgRating?: number;
 
   @IsOptional()
   @IsBoolean()

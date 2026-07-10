@@ -4,7 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { User } from '../users/user.entity';
+import { Movie } from '../movies/movies.entity';
 
 @Entity('comments') // ← Tên bảng vẫn là 'comments'
 export class CommentEntity {
@@ -31,4 +35,12 @@ export class CommentEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  // ✅ QUAN HỆ MOVIE
+  @ManyToOne(() => Movie)
+  @JoinColumn({ name: 'movie_id' })
+  movie: Movie;
 }
