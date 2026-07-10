@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { AuthContext } from './AuthContext';
+import { useState, useEffect } from "react";
+import { AuthContext } from "./AuthContext";
 
 // ============================================================
 // AuthProvider — quản lý trạng thái đăng nhập cho TOÀN APP.
@@ -10,15 +10,15 @@ import { AuthContext } from './AuthContext';
 
 // Đọc user đã lưu trong localStorage (nếu có) — chạy 1 lần khi khởi tạo state
 function getStoredUser() {
-  const storedUser = localStorage.getItem('user');
-  const token = localStorage.getItem('accessToken');
+  const storedUser = localStorage.getItem("user");
+  const token = localStorage.getItem("accessToken");
   if (!storedUser || !token) return null;
   try {
     return JSON.parse(storedUser);
   } catch {
     // Dữ liệu hỏng → dọn sạch, coi như chưa đăng nhập
-    localStorage.removeItem('user');
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
     return null;
   }
 }
@@ -28,24 +28,36 @@ export function AuthProvider({ children }) {
   // Truyền getStoredUser (lazy init) → React chỉ chạy hàm này 1 lần lúc đầu.
   const [user, setUser] = useState(getStoredUser);
 
+  useEffect(() => {
+    const handleAuthUpdated = () => {
+      const storedUser = getStoredUser();
+      setUser(storedUser);
+    };
+
+    window.addEventListener("auth:updated", handleAuthUpdated);
+    return () => window.removeEventListener("auth:updated", handleAuthUpdated);
+  }, []);
+
   // Gọi sau khi login thành công. Backend trả { accessToken, user }.
   const login = (accessToken, userData) => {
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
+    window.dispatchEvent(new Event("auth:updated"));
   };
 
   // Đăng xuất: xóa token + user ở client (JWT stateless nên chỉ xóa phía client)
   const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
     setUser(null);
+    window.dispatchEvent(new Event("auth:updated"));
   };
 
   const value = {
     user, // object user hoặc null
     isAuthenticated: !!user, // true nếu đã đăng nhập
-    isAdmin: user?.role === 'admin', // tiện kiểm tra quyền admin
+    isAdmin: user?.role === "admin", // tiện kiểm tra quyền admin
     login,
     logout,
   };

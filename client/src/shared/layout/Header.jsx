@@ -3,6 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../providers/useAuth";
 import ThemeToggle from "../components/ThemeToggle";
 import { MOVIE_TYPE } from "../../config/constants";
+import {
+  useGenres,
+  useCountries,
+} from "../../features/admin/hooks/useAdminMeta";
 
 // ============================================================
 // Header — thanh điều hướng dùng chung mọi trang.
@@ -10,57 +14,20 @@ import { MOVIE_TYPE } from "../../config/constants";
 // Cần STYLES pp-* (được load qua MainLayout).
 // ============================================================
 
-const GENRES = [
-  { name: "Hành Động", slug: "hanh-dong" },
-  { name: "Tình Cảm", slug: "tinh-cam" },
-  { name: "Hài Hước", slug: "hai-huoc" },
-  { name: "Cổ Trang", slug: "co-trang" },
-  { name: "Tâm Lý", slug: "tam-ly" },
-  { name: "Hình Sự", slug: "hinh-su" },
-  { name: "Chiến Tranh", slug: "chien-tranh" },
-  { name: "Thể Thao", slug: "the-thao" },
-  { name: "Võ Thuật", slug: "vo-thuat" },
-  { name: "Viễn Tưởng", slug: "vien-tuong" },
-  { name: "Phiêu Lưu", slug: "phieu-luu" },
-  { name: "Khoa Học", slug: "khoa-hoc" },
-  { name: "Kinh Dị", slug: "kinh-di" },
-  { name: "Âm Nhạc", slug: "am-nhac" },
-  { name: "Thần Thoại", slug: "than-thoai" },
-  { name: "Chính Kịch", slug: "chinh-kich" },
-  { name: "Học Đường", slug: "hoc-duong" },
-  { name: "Gia Đình", slug: "gia-dinh" },
-  { name: "Bí Ẩn", slug: "bi-an" },
-  { name: "Tài Liệu", slug: "tai-lieu" },
-  { name: "Gây Cấn", slug: "gay-can" },
-  { name: "Lịch Sử", slug: "lich-su" },
-  { name: "Hoạt Hình", slug: "hoat-hinh" },
-  { name: "Kiếm Hiệp", slug: "kiem-hiep" },
-  { name: "Khoa Huyễn", slug: "khoa-huyen" },
-  { name: "Chính Trị", slug: "chinh-tri" },
-  { name: "Kinh Điển", slug: "kinh-dien" },
-  { name: "Đời Thường", slug: "doi-thuong" },
-  { name: "Tội Phạm", slug: "toi-pham" },
-  { name: "Siêu Anh Hùng", slug: "sieu-anh-hung" },
-];
-
-const COUNTRIES = [
-  { name: "Việt Nam", slug: "viet-nam" },
-  { name: "Hàn Quốc", slug: "han-quoc" },
-  { name: "Trung Quốc", slug: "trung-quoc" },
-  { name: "Nhật Bản", slug: "nhat-ban" },
-  { name: "Thái Lan", slug: "thai-lan" },
-  { name: "Âu Mỹ", slug: "au-my" },
-  { name: "Đài Loan", slug: "dai-loan" },
-  { name: "Hồng Kông", slug: "hong-kong" },
-  { name: "Ấn Độ", slug: "an-do" },
-  { name: "Anh", slug: "anh" },
-];
+// GENRES and COUNTRIES are fetched inside the component via hooks
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [keyword, setKeyword] = useState("");
+
+  // ✅ LẤY DỮ LIỆU TỪ BACKEND
+  const { data: genresData } = useGenres();
+  const { data: countriesData } = useCountries();
+  const GENRES = genresData || [];
+  const COUNTRIES = countriesData || [];
+  // ---------------------------
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -163,10 +130,13 @@ export default function Header() {
                 <Link to="/yeu-thich" className="pp-menu-link">
                   <i className="bi bi-heart" /> Yêu thích
                 </Link>
-                <Link to="/xem-sau" className="pp-menu-link"><i className="bi bi-bookmark-plus" /> Xem sau</Link>
+                <Link to="/xem-sau" className="pp-menu-link">
+                  <i className="bi bi-bookmark-plus" /> Xem sau
+                </Link>
                 <Link to="/lich-su" className="pp-menu-link">
                   <i className="bi bi-clock-history" /> Lịch sử xem
                 </Link>
+                <Link to="/profile" className="pp-menu-link"><i className="bi bi-person-gear"></i> Hồ sơ cá nhân</Link>
                 <button className="pp-menu-link pp-logout" onClick={logout}>
                   <i className="bi bi-box-arrow-right" /> Đăng xuất
                 </button>

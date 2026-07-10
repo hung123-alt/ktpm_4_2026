@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import MainLayout from '../../../shared/layout/MainLayout';
@@ -15,9 +15,13 @@ export default function SearchPage() {
 
   const [inputValue, setInputValue] = useState(keyword);
 
-  useEffect(() => {
+  const [prevKeyword, setPrevKeyword] = useState(keyword);
+
+  // ✅ SỬA Ở ĐÂY: Xóa bỏ useEffect và cập nhật state trực tiếp
+  if (keyword !== prevKeyword) {
+    setPrevKeyword(keyword);
     setInputValue(keyword);
-  }, [keyword]);
+  }
 
   // ✅ SỬA Ở ĐÂY: Dùng moviesApi.getAll có sẵn, truyền params là keyword
   const { data, isLoading, isError } = useQuery({

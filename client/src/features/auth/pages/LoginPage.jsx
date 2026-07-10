@@ -1,42 +1,36 @@
 import { useState } from 'react';
 import { Form, Alert, Spinner } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axiosClient from '../../../lib/axiosClient';
+import { Link, useLocation } from 'react-router-dom';
+// ✅ Thêm import hook useLogin
+import { useLogin } from '../hooks/useLogin';
 
 export default function LoginPage() {
-  const navigate = useNavigate();
+  // ✅ Lấy location để hiển thị thông báo (nếu có)
   const location = useLocation();
   const successMessage = location.state?.message;
 
+  // ✅ Gọi hook useLogin để xử lý API, lưu token và cập nhật Context
+  const { mutate: login, isPending, isError, error } = useLogin();
+
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  
+  // State quản lý ẩn/hiện mật khẩu
+  const [showPassword, setShowPassword] = useState(false);
   
   // State quản lý chế độ Sáng / Tối
   const [isLightMode, setIsLightMode] = useState(false);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError(null);
-    try {
-      setLoading(true);
-      const response = await axiosClient.post('/auth/login', {
-        email: formData.email,
-        password: formData.password,
-      });
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Email hoặc mật khẩu không chính xác.');
-    } finally {
-      setLoading(false);
-    }
+    // ✅ Gọi hàm login từ hook, truyền vào dữ liệu form
+    // Hook sẽ tự động gọi API, lưu Token vào AuthProvider và điều hướng về trang chủ
+    login(formData);
   };
 
   const toggleTheme = () => setIsLightMode(!isLightMode);
+  const toggleShowPassword = () => setShowPassword(!showPassword);
 
   return (
     <>
@@ -48,7 +42,6 @@ export default function LoginPage() {
             --text-muted: #aaaaaa;
           }
 
-          /* Bộ giáp ngoài cùng: Ép buộc full màn hình 100%, đè mọi CSS mặc định của React */
           .auth-page-container {
             position: fixed;
             top: 0;
@@ -62,7 +55,6 @@ export default function LoginPage() {
             transition: background-color 0.3s ease;
           }
 
-          /* Header (Trang chủ & Nút Quay lại) */
           .auth-header {
             background: transparent;
             position: absolute;
@@ -100,7 +92,6 @@ export default function LoginPage() {
             color: var(--primary-color);
           }
 
-          /* Hình nền Gradient & Căn giữa Form */
           .auth-wrapper {
             min-height: 100vh;
             width: 100%;
@@ -114,7 +105,6 @@ export default function LoginPage() {
             padding: 20px;
           }
 
-          /* Hộp đăng nhập */
           .login-box {
             background-color: ${isLightMode ? 'rgba(255, 255, 255, 0.95)' : 'rgba(26, 26, 26, 0.9)'};
             backdrop-filter: blur(10px);
@@ -124,7 +114,7 @@ export default function LoginPage() {
             border-radius: 12px;
             border: 1px solid ${isLightMode ? '#e0e0e0' : '#2b2b2b'};
             box-shadow: 0 15px 35px rgba(0, 0, 0, ${isLightMode ? '0.15' : '0.6'});
-            margin-top: 40px; /* Đẩy xuống một chút nhường chỗ cho header */
+            margin-top: 40px;
             transition: all 0.3s ease;
           }
 
@@ -141,6 +131,7 @@ export default function LoginPage() {
             flex-direction: column;
             gap: 8px;
             margin-bottom: 18px;
+            position: relative;
           }
 
           .input-group-custom label {
@@ -156,6 +147,7 @@ export default function LoginPage() {
             border: 1px solid ${isLightMode ? '#ccc' : '#333'};
             border-radius: 6px;
             padding: 13px 15px;
+            padding-right: 40px;
             color: ${isLightMode ? '#111' : '#fff'};
             font-size: 15px;
             transition: border-color 0.3s ease, background-color 0.3s ease;
@@ -165,6 +157,20 @@ export default function LoginPage() {
             outline: none;
             border-color: var(--primary-color);
             background-color: ${isLightMode ? '#fdfdfd' : '#1a1a1a'};
+          }
+
+          .password-toggle-icon {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            color: ${isLightMode ? '#666' : '#aaa'};
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.2s;
+          }
+
+          .password-toggle-icon:hover {
+            color: var(--primary-color);
           }
 
           .forgot-pwd-link {
@@ -221,7 +227,6 @@ export default function LoginPage() {
             text-decoration: underline;
           }
 
-          /* Nút Light/Dark Mode Float */
           .btn-theme-toggle {
             position: fixed;
             bottom: 20px;
@@ -246,36 +251,29 @@ export default function LoginPage() {
         `}
       </style>
 
-      {/* Bao bọc toàn trang để chống bị margin của App.css */}
       <div className="auth-page-container">
-        
-        {/* Header Trong suốt */}
         <header className="auth-header">
           <Link to="/" className="logo">PHIMPLAY24</Link>
           <Link to="/" className="back-link">
-            {/* Đây là Icon siêu đẹp bạn yêu cầu */}
             <i className="bi bi-arrow-left-circle-fill me-2" style={{ color: 'var(--primary-color)', fontSize: '18px' }}></i>
             Quay lại Trang chủ
           </Link>
         </header>
 
-        {/* Nội dung Form */}
         <div className="auth-wrapper">
           <div className="login-box">
-            
             <h2>Đăng nhập Phimplay24</h2>
 
-            {/* Thông báo đăng ký thành công */}
             {successMessage && (
               <Alert variant="success" className="border-0 rounded-2" style={{ backgroundColor: 'rgba(40, 167, 69, 0.15)', color: '#4caf50' }}>
                 <i className="bi bi-check-circle me-2"></i>{successMessage}
               </Alert>
             )}
 
-            {/* Thông báo lỗi */}
-            {error && (
+            {/* ✅ Sử dụng isError và error từ hook useLogin */}
+            {isError && (
               <Alert variant="danger" className="border-0 rounded-2" style={{ backgroundColor: 'rgba(220, 53, 69, 0.15)', color: '#ff6b6b' }}>
-                <i className="bi bi-exclamation-circle me-2"></i>{error}
+                <i className="bi bi-exclamation-circle me-2"></i>{error?.response?.data?.message || 'Email hoặc mật khẩu không chính xác.'}
               </Alert>
             )}
 
@@ -297,7 +295,7 @@ export default function LoginPage() {
               <div className="input-group-custom">
                 <label htmlFor="password">Mật khẩu</label>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   className="form-control-custom"
@@ -306,14 +304,20 @@ export default function LoginPage() {
                   onChange={handleChange}
                   required
                 />
+                <i 
+                  className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} password-toggle-icon`}
+                  onClick={toggleShowPassword}
+                  title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                ></i>
               </div>
 
               <Link to="/forgot-password" className="forgot-pwd-link">
                 Quên mật khẩu?
               </Link>
 
-              <button type="submit" className="btn-login" disabled={loading}>
-                {loading ? (
+              {/* ✅ Sử dụng isPending từ hook useLogin */}
+              <button type="submit" className="btn-login" disabled={isPending}>
+                {isPending ? (
                   <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
                 ) : (
                   'Đăng nhập'
@@ -327,7 +331,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Nút Đổi màu (Light/Dark mode) */}
         <button className="btn-theme-toggle" onClick={toggleTheme}>
           {isLightMode ? '🌙 Chế độ Tối' : '☀️ Chế độ Sáng'}
         </button>

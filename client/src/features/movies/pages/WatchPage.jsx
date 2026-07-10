@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import MainLayout from "../../../shared/layout/MainLayout";
 import { useMovieDetail } from "../hooks/useMovieDetail";
 import { useEpisodes } from "../hooks/useEpisodes";
 import { useAuth } from "../../../providers/useAuth";
 import { useTheme } from "../../../providers/useTheme";
+import { useCreateReport } from "../../reports/hooks/useReports";
+import {
+  useMovieComments,
+  useCreateComment,
+} from "../../interactions/hooks/useComments";
+import { useSaveWatchHistory } from "../../interactions/hooks/useWatchHistory";
 
 const FALLBACK = "https://placehold.co/300x450/1a1a22/f59e0b?text=PHIMPLAY24";
 
@@ -16,9 +22,32 @@ export default function WatchPage() {
   const { data: movie, isLoading: movieLoading } = useMovieDetail(slug);
   const { data: episodes, isLoading: epLoading } = useEpisodes(movie?.id);
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const saveHistoryMut = useSaveWatchHistory();
+
+  const createReportMut = useCreateReport();
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportType, setReportType] = useState("video_not_load");
+  const [reportDesc, setReportDesc] = useState("");
+
+  // === HOOKS BÌNH LUẬN ===
+  const { data: comments, isLoading: cmtLoading } = useMovieComments(movie?.id);
+  const createCmtMut = useCreateComment();
+  const [commentText, setCommentText] = useState("");
+
+  const handlePostComment = (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    createCmtMut.mutate(
+      { movieId: movie.id, content: commentText },
+      {
+        onSuccess: () => setCommentText(""),
+      },
+    );
+  };
+  // =======================
 
   // State quản lý các nút toggle (ON/OFF)
   const [toggles, setToggles] = useState({
@@ -31,6 +60,22 @@ export default function WatchPage() {
     (ep) => ep.episodeNumber === currentTap,
   );
   const embedUrl = currentEpisode?.embedUrl;
+
+  useEffect(() => {
+    if (isAuthenticated && movie?.id && currentEpisode?.id && embedUrl) {
+      saveHistoryMut.mutate({
+        movieId: movie.id,
+        episodeId: currentEpisode.id,
+        progressSeconds: 0,
+      });
+    }
+  }, [
+    isAuthenticated,
+    movie?.id,
+    currentEpisode?.id,
+    embedUrl,
+    saveHistoryMut,
+  ]);
 
   if (movieLoading) {
     return (
@@ -217,7 +262,25 @@ export default function WatchPage() {
             <div style={{ display: "flex", gap: 20 }}>
               <ToolbarButton icon="↗️" text="Chia sẻ" />
               <ToolbarButton icon="📡" text="Xem chung" />
-              <ToolbarButton icon="🚩" text="Báo lỗi" />
+              <button
+                onClick={() =>
+                  isAuthenticated
+                    ? setShowReportModal(true)
+                    : alert("Vui lòng đăng nhập để báo lỗi")
+                }
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "none",
+                  border: "none",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: 14,
+                }}
+              >
+                🚩 Báo lỗi
+              </button>
             </div>
           </div>
 
@@ -502,71 +565,269 @@ export default function WatchPage() {
 
             {/* Bình luận (Cột phải) */}
             <div style={{ flex: "1 1 65%", minWidth: 300 }}>
-              <div
+              <h3
                 style={{
-                  background: colors.boxBg,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 12,
-                  padding: 32,
-                  textAlign: "center",
-                  minHeight: "200px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  marginBottom: 16,
+                  color: isDark ? "#fff" : "#111",
                 }}
               >
-                <h3
+                Bình luận ({comments?.length || 0})
+              </h3>
+
+              {isAuthenticated ? (
+                <form
+                  onSubmit={handlePostComment}
+                  style={{ display: "flex", gap: 12, marginBottom: 24 }}
+                >
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: "#f59e0b",
+                      color: "#000",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {user?.username?.[0]?.toUpperCase() || "U"}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      placeholder="Bình luận về tập phim này..."
+                      rows={3}
+                      style={{
+                        width: "100%",
+                        padding: 12,
+                        borderRadius: 8,
+                        background: isDark ? "#16171d" : "#f8f9fa",
+                        border: `1px solid ${isDark ? "#2a2b33" : "#e5e7eb"}`,
+                        color: isDark ? "#fff" : "#000",
+                        resize: "vertical",
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={createCmtMut.isPending}
+                      style={{
+                        marginTop: 8,
+                        background: "#3c50e0",
+                        color: "#fff",
+                        border: "none",
+                        padding: "8px 20px",
+                        borderRadius: 8,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {createCmtMut.isPending ? "Đang gửi..." : "Gửi bình luận"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div
                   style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    marginBottom: 16,
-                    color: colors.headerText,
-                    textAlign: "left",
+                    padding: 24,
+                    background: isDark ? "#16171d" : "#f8f9fa",
+                    borderRadius: 12,
+                    textAlign: "center",
+                    marginBottom: 24,
                   }}
                 >
-                  Bình luận (0)
-                </h3>
-                {!isAuthenticated ? (
-                  <>
-                    <p
-                      style={{
-                        marginBottom: 12,
-                        fontSize: 14,
-                        color: colors.subText,
-                      }}
-                    >
-                      Đăng nhập để bình luận
-                    </p>
-                    <Link
-                      to="/login"
-                      style={{
-                        display: "inline-block",
-                        margin: "0 auto",
-                        padding: "8px 20px",
-                        borderRadius: 24,
-                        background: "#f59e0b",
-                        color: "#000",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Đăng nhập ngay
-                    </Link>
-                  </>
-                ) : (
-                  <p style={{ fontSize: 14, color: colors.subText }}>
-                    Tính năng bình luận đang được phát triển.
-                  </p>
-                )}
-              </div>
+                  <Link
+                    to="/login"
+                    style={{ color: "#f59e0b", fontWeight: 600 }}
+                  >
+                    Đăng nhập
+                  </Link>{" "}
+                  để bình luận
+                </div>
+              )}
+
+              {/* Danh sách bình luận */}
+              {cmtLoading ? (
+                <p>Đang tải...</p>
+              ) : (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 16 }}
+                >
+                  {comments?.map((cmt) => (
+                    <div key={cmt.id} style={{ display: "flex", gap: 12 }}>
+                      <div
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          background: `hsl(${(cmt.userId * 67) % 360}, 60%, 50%)`,
+                          color: "#fff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {cmt.user?.username?.[0]?.toUpperCase() || "A"}
+                      </div>
+                      <div
+                        style={{
+                          flex: 1,
+                          background: isDark
+                            ? "rgba(255,255,255,0.05)"
+                            : "#f8f9fa",
+                          padding: 12,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 700,
+                              color: isDark ? "#fff" : "#111",
+                              fontSize: 14,
+                            }}
+                          >
+                            {cmt.user?.username || "Ẩn danh"}
+                          </span>
+                          <span style={{ fontSize: 12, color: "#64748b" }}>
+                            {new Date(cmt.createdAt).toLocaleDateString(
+                              "vi-VN",
+                            )}
+                          </span>
+                        </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            color: isDark ? "#cbd5e1" : "#475569",
+                            fontSize: 14,
+                          }}
+                        >
+                          {cmt.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Modal Báo lỗi */}
+        {showReportModal && (
+          <div style={modalOverlay} onClick={() => setShowReportModal(false)}>
+            <div style={modalContent} onClick={(e) => e.stopPropagation()}>
+              <h2 style={{ marginTop: 0, color: "#1e293b" }}>Báo lỗi phim</h2>
+              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 16 }}>
+                Phim: {movie.title} - Tập {currentTap}
+              </p>
+
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  style={{
+                    padding: 10,
+                    borderRadius: 6,
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <option value="video_not_load">
+                    Video không chạy / Đen màn hình
+                  </option>
+                  <option value="wrong_episode">Sai tập phim</option>
+                  <option value="audio_error">Lỗi âm thanh (mất tiếng)</option>
+                  <option value="subtitle_error">Lỗi phụ đề</option>
+                  <option value="other">Lỗi khác</option>
+                </select>
+
+                <textarea
+                  placeholder="Mô tả chi tiết lỗi (nếu có)..."
+                  rows="3"
+                  value={reportDesc}
+                  onChange={(e) => setReportDesc(e.target.value)}
+                  style={{
+                    padding: 10,
+                    borderRadius: 6,
+                    border: "1px solid #e2e8f0",
+                    resize: "vertical",
+                  }}
+                />
+
+                <button
+                  onClick={() => {
+                    createReportMut.mutate(
+                      {
+                        movieId: movie.id,
+                        episodeId: currentEpisode?.id,
+                        errorType: reportType || "other",
+                        description: reportDesc || "",
+                      },
+                      {
+                        onSuccess: () => {
+                          alert("Cảm ơn bạn đã báo lỗi! Admin sẽ xử lý sớm.");
+                          setShowReportModal(false);
+                          setReportDesc("");
+                          setReportType("video_not_load");
+                        },
+                        onError: () => alert("Gửi báo lỗi thất bại."),
+                      },
+                    );
+                  }}
+                  style={{
+                    background: "#3c50e0",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px",
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    marginTop: 8,
+                  }}
+                >
+                  Gửi báo cáo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
 }
+
+// --- Modal Styles ---
+const modalOverlay = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.7)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 9999,
+};
+const modalContent = {
+  background: "#fff",
+  padding: 32,
+  borderRadius: 12,
+  width: "100%",
+  maxWidth: 450,
+};
 
 // --- Components phụ trợ cho Thanh công cụ ---
 function ToolbarButton({ icon, text }) {

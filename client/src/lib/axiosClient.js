@@ -7,7 +7,7 @@ import axios from 'axios';
 
 // baseURL đọc từ biến môi trường (file .env), fallback về localhost khi dev.
 // ⚠️ Vite dùng import.meta.env.VITE_... (KHÔNG phải process.env.REACT_APP_ như CRA)
-const baseURL = 'https://probable-space-telegram-4jw9gwg9p4wp279j6-8000.app.github.dev/api';
+const baseURL = 'https://redesigned-train-g47w575wvpqxhv594-8000.app.github.dev/api';
 
 const axiosClient = axios.create({
   baseURL,

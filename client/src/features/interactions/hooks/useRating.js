@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ratingsApi } from '../api/ratingsApi';
 import { ratingKeys } from '../queries';
-import { movieKeys } from '../../movies/queries';
+
 
 // useMyRating — đánh giá của tôi cho 1 phim (để hiện sao đã chọn)
 export function useMyRating(movieId) {
@@ -19,8 +19,10 @@ export function useRateMovie() {
   return useMutation({
     mutationFn: (payload) => ratingsApi.rate(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ratingKeys.myRating(variables.movieId) });
-      queryClient.invalidateQueries({ queryKey: movieKeys.details() });
+      // Làm mới điểm rating của mình
+      queryClient.invalidateQueries({ queryKey: ['rating', 'me', variables.movieId] });
+      // Làm mới toàn bộ chi tiết phim (để cập nhật avgRating trên giao diện)
+      queryClient.invalidateQueries({ queryKey: ['movies'] }); 
     },
   });
 }

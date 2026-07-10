@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { watchHistoryApi } from '../api/watchHistoryApi';
-import { watchHistoryKeys } from '../queries';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { watchHistoryApi } from "../api/watchHistoryApi";
+import { watchHistoryKeys } from "../queries";
 
 // useWatchHistory — danh sách "xem tiếp" của tôi
 export function useWatchHistory() {
@@ -16,6 +16,11 @@ export function useSaveProgress() {
   return useMutation({
     mutationFn: (payload) => watchHistoryApi.saveProgress(payload),
   });
+}
+
+// Alias dùng cho WatchPage
+export function useSaveWatchHistory() {
+  return useSaveProgress();
 }
 
 // useRemoveHistory — xóa 1 bản ghi lịch sử

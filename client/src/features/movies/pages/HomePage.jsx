@@ -303,6 +303,7 @@ function Header() {
               <Link to="/yeu-thich" className="pp-menu-link"><i className="bi bi-heart" /> Yêu thích</Link>
               <Link to="/xem-sau" className="pp-menu-link"><i className="bi bi-bookmark-plus" /> Xem sau</Link>
               <Link to="/lich-su" className="pp-menu-link"><i className="bi bi-clock-history" /> Lịch sử xem</Link>
+              <Link to="/profile" className="pp-menu-link"><i className="bi bi-person-gear"></i> Hồ sơ cá nhân</Link>
               <button className="pp-menu-link pp-logout" onClick={logout}>
                 <i className="bi bi-box-arrow-right" /> Đăng xuất
               </button>
