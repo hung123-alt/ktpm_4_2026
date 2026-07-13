@@ -165,27 +165,155 @@ cinema-online-hub/
 │           ├── error-reports/             → Người dùng báo lỗi, Admin xử lý
 │           └── admin/                     → Dashboard thống kê, quản lý toàn hệ thống
 │
-└── client/                               # Frontend — React (Vite)
-    └── src/
-        ├── providers/
-        │   ├── AuthProvider.jsx           → Quản lý trạng thái đăng nhập toàn app
-        │   └── QueryProvider.jsx          → Cấu hình TanStack Query (cache)
-        ├── lib/
-        │   ├── axiosClient.js             → Axios instance, tự gắn JWT vào mọi request
-        │   └── queryClient.js             → Cấu hình cache (staleTime, retry...)
-        ├── routes/
-        │   ├── AppRoutes.jsx               → Khai báo toàn bộ URL của app
-        │   ├── ProtectedRoute.jsx         → Chặn trang cần đăng nhập
-        │   └── AdminRoute.jsx              → Chặn trang cần quyền Admin
-        ├── config/
-        │   └── constants.js                → Hằng số khớp enum Backend (loại phim, sortBy...)
-        └── features/                       # Mỗi thư mục = 1 tính năng, tự chứa api/hooks/pages
-            ├── auth/        → api gọi login/register + hook useLogin/useRegister + trang Login/Register
-            ├── movies/       → api gọi phim + hook useMovies/useMovieFilter + trang Home/Detail/Watch
-            ├── comments/     → api + hook useComments (xem, thêm, xóa bình luận)
-            ├── interactions/ → api + hook cho favorites, ratings, watchlist, watch-history
-            ├── notifications/ → api + hook useNotifications
-            └── admin/         → api + hook + trang Dashboard, quản lý phim/user
+└──client/
+├── .env                                  → Khai báo VITE_API_URL (địa chỉ Backend)
+├── vite.config.js                        → Cấu hình Vite (plugin React, Tailwind...)
+├── index.html                            → File HTML duy nhất, chứa <div id="root">
+│
+├── public/                               → Ảnh/icon tĩnh, không qua build
+│
+└── src/
+    ├── App.jsx                           → Bọc BrowserRouter + AppRoutes
+    ├── main.jsx                          → Điểm khởi động, bọc AppProviders
+    ├── assets/                           → Ảnh mặc định của Vite (hero, logo)
+    │
+    ├── config/
+    │   └── constants.js                  → Hằng số khớp enum Backend (loại phim, sortBy, role...)
+    │
+    ├── lib/
+    │   ├── axiosClient.js                → Axios instance, tự gắn JWT vào mọi request
+    │   └── queryClient.js                → Cấu hình cache TanStack (staleTime, retry...)
+    │
+    ├── providers/
+    │   ├── AuthContext.js                → Context object quản lý đăng nhập (thuần)
+    │   ├── AuthProvider.jsx              → Component cung cấp user/login/logout
+    │   ├── useAuth.js                    → Hook đọc AuthContext
+    │   ├── ThemeContext.js               → Context object cho Dark/Light mode
+    │   ├── ThemeProvider.jsx             → Component quản lý theme, lưu localStorage
+    │   ├── useTheme.js                   → Hook đọc ThemeContext
+    │   ├── QueryProvider.jsx             → Bọc QueryClientProvider + Devtools
+    │   └── AppProviders.jsx              → Gộp Auth + Theme + Query Provider
+    │
+    ├── routes/
+    │   ├── AppRoutes.jsx                 → Khai báo toàn bộ URL của app
+    │   ├── ProtectedRoute.jsx            → Chặn trang cần đăng nhập
+    │   └── AdminRoute.jsx                → Chặn trang cần quyền Admin
+    │
+    ├── shared/
+    │   ├── components/
+    │   │   └── ThemeToggle.jsx           → Nút bật/tắt Dark-Light mode dùng chung
+    │   ├── layout/
+    │   │   ├── Header.jsx                → Thanh điều hướng trên cùng
+    │   │   ├── Footer.jsx                → Chân trang dùng chung
+    │   │   ├── MainLayout.jsx            → Khung layout cho trang User (bọc Header/Footer)
+    │   │   └── AdminLayout.jsx           → Khung layout riêng cho khu vực Admin (sidebar...)
+    │   └── utils/
+    │       └── reportWebVitals.js        → Đo chỉ số hiệu năng (CLS, LCP, INP...)
+    │
+    └── features/
+        │
+        ├── auth/
+        │   ├── api/authApi.js            → Gọi API: login, register, forgot/reset password
+        │   ├── hooks/
+        │   │   ├── useLogin.js           → useMutation đăng nhập
+        │   │   ├── useRegister.js        → useMutation đăng ký
+        │   │   ├── useForgotPassword.js  → useMutation gửi email quên mật khẩu
+        │   │   ├── useResetPassword.js   → useMutation đặt lại mật khẩu
+        │   │   ├── useChangePassword.js  → useMutation đổi mật khẩu
+        │   │   └── useProfile.js         → useQuery lấy thông tin hồ sơ cá nhân
+        │   ├── pages/
+        │   │   ├── LoginPage.jsx
+        │   │   ├── RegisterPage.jsx
+        │   │   ├── ForgotPasswordPage.jsx
+        │   │   ├── ResetPasswordPage.jsx
+        │   │   └── ProfilePage.jsx       → Trang xem/sửa hồ sơ cá nhân
+        │   ├── queries.js                → Query Key Factory của auth
+        │   └── index.js                  → Cửa export công khai
+        │
+        ├── movies/
+        │   ├── api/
+        │   │   ├── moviesApi.js          → Gọi API phim (list, detail, filter, random, CRUD)
+        │   │   └── episodesApi.js        → Gọi API tập phim (list theo phim, CRUD)
+        │   ├── hooks/
+        │   │   ├── useMovies.js          → useQuery danh sách phim
+        │   │   ├── useMovieDetail.js     → useQuery chi tiết 1 phim
+        │   │   ├── useMovieFilter.js     → useInfiniteQuery bộ lọc (phân trang)
+        │   │   ├── useRandomMovie.js     → useQuery random nhanh
+        │   │   ├── useRandomAdvanced.js  → useQuery random nâng cao
+        │   │   ├── useMovieMutations.js  → useMutation tạo/sửa/xóa phim (Admin)
+        │   │   └── useEpisodes.js        → useQuery danh sách tập phim
+        │   ├── pages/
+        │   │   ├── HomePage.jsx
+        │   │   ├── MovieDetailPage.jsx
+        │   │   ├── WatchPage.jsx         → Trang xem phim (player, skip intro, chuyển tập)
+        │   │   ├── FilterPage.jsx
+        │   │   ├── SearchPage.jsx        → Trang tìm kiếm theo từ khóa
+        │   │   ├── RandomPage.jsx
+        │   │   └── NotFoundPage.jsx      → Trang 404
+        │   ├── queries.js
+        │   └── index.js
+        │
+        ├── comments/
+        │   ├── api/commentsApi.js        → Gọi API bình luận
+        │   ├── hooks/
+        │   │   ├── useComments.js        → useQuery danh sách bình luận
+        │   │   └── useCommentMutations.js → useMutation thêm/xóa bình luận
+        │   ├── queries.js
+        │   └── index.js
+        │
+        ├── interactions/                 → Gom: yêu thích, đánh giá, xem sau, lịch sử
+        │   ├── api/
+        │   │   ├── favoritesApi.js
+        │   │   ├── ratingsApi.js
+        │   │   ├── watchlistApi.js
+        │   │   ├── watchHistoryApi.js
+        │   │   └── commentsApi.js        → (dùng riêng cho trang tương tác, nếu cần)
+        │   ├── hooks/
+        │   │   ├── useFavorites.js       → useMutation toggle + Optimistic Update
+        │   │   ├── useRating.js          → useMutation đánh giá (upsert)
+        │   │   ├── useWatchlist.js       → useMutation toggle xem sau
+        │   │   ├── useWatchHistory.js    → useQuery/useMutation lịch sử xem
+        │   │   └── useComments.js
+        │   ├── pages/
+        │   │   ├── FavoritesPage.jsx
+        │   │   ├── WatchlistPage.jsx
+        │   │   └── HistoryPage.jsx
+        │   ├── queries.js
+        │   └── index.js
+        │
+        ├── notifications/
+        │   ├── api/notificationsApi.js
+        │   ├── hooks/useNotifications.js
+        │   ├── queries.js
+        │   └── index.js
+        │
+        ├── reports/                      → Báo lỗi phim (phía User gửi)
+        │   ├── api/reportsApi.js         → Gọi API tạo báo lỗi
+        │   ├── hooks/useReports.js        → useMutation gửi báo lỗi
+        │   ├── queries.js
+        │   └── index.js
+        │
+        └── admin/
+            ├── api/
+            │   ├── adminApi.js           → API thống kê Dashboard
+            │   ├── adminCommentsApi.js   → API duyệt/ẩn bình luận
+            │   ├── adminMetaApi.js       → API quản lý Thể loại/Quốc gia
+            │   └── usersApi.js           → API quản lý người dùng (khóa/mở)
+            ├── hooks/
+            │   ├── useAdmin.js           → useQuery số liệu Dashboard
+            │   ├── useAdminComments.js   → useQuery/useMutation duyệt bình luận
+            │   ├── useAdminMeta.js       → useMutation CRUD thể loại/quốc gia
+            │   ├── useUsers.js           → useQuery/useMutation quản lý user
+            │   ├── useMovieMutations.js  → CRUD phim (phía Admin)
+            │   └── useEpisodeMutations.js → CRUD tập phim (phía Admin)
+            └── pages/
+                ├── DashboardPage.jsx
+                ├── MovieManagePage.jsx
+                ├── CommentManagePage.jsx
+                ├── GenreManagePage.jsx
+                ├── CountryManagePage.jsx
+                ├── UserManagePage.jsx
+                └── ReportManagePage.jsx  → Xem/xử lý báo lỗi từ user
 ```
 
 ---
