@@ -463,8 +463,7 @@ Frontend chạy tại `http://localhost:5173`, Backend tại `http://localhost:3
 |-----------|------|---------|
 | **Nhóm 4** | — | Backend · Frontend · Database · Bảo mật |
 
-**Giảng viên hướng dẫn:** Nguyễn Thành Trung · TS. Nguyễn Lệ Thu
-**Môn học:** Thiết kế Web Nâng cao · Phenikaa University · 2026
+
 
 </div>
 
