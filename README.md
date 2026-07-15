@@ -430,6 +430,45 @@ movies ──┬──< episodes
 - **Node.js 18+**
 - **npm**
 - Kết nối Internet (Database Aiven MySQL Cloud)
+- ## 🔑 Cấu hình biến môi trường (.env)
+ 
+Trước khi chạy, cần tạo file server/`.env` cho **cả Backend và Frontend** (file này không được đẩy lên Git vì chứa thông tin nhạy cảm).
+ link file .env demo dự án: https://docs.google.com/document/d/1kX66Npwnat6lsCQmS0X0tSuff3kWD4tz9G__0v3a28Y/edit?usp=sharing
+### 1. Backend — tạo file `server/.env`
+ 
+```env
+# Kết nối Database (MySQL trên Aiven Cloud)
+DB_HOST=mysql-webphim-loct63636-960f.c.aivencloud.com
+DB_PORT=16014
+DB_USERNAME=avnadmin
+DB_PASSWORD=<mật khẩu Aiven được cấp> 
+DB_NAME=defaultdb
+DB_SSL_CA=./ca.pem
+ 
+# JWT
+JWT_SECRET=<chuỗi bí mật tự đặt, dùng để ký JWT>
+JWT_EXPIRES_IN=900
+ 
+# Gửi email (chức năng Quên mật khẩu)
+MAIL_USER=<địa chỉ Gmail dùng để gửi>
+MAIL_PASSWORD=<Gmail App Password — không phải mật khẩu Gmail thường>
+ 
+# Cổng chạy server
+PORT=3000
+```
+ 
+> ⚠️ **Lưu ý khi chạy thử:** cần có file chứng chỉ SSL `ca.pem` (do Aiven cấp) đặt ở gốc thư mục `server/`, vì Database bắt buộc kết nối qua SSL.
+ 
+### 2. Frontend — tạo file `client/.env`
+ 
+```env
+# Địa chỉ Backend API
+VITE_API_URL=http://localhost:3000/api
+```
+ 
+> ⚠️ Biến môi trường Frontend **bắt buộc phải có tiền tố `VITE_`** thì Vite mới đọc được — đây là quy ước riêng của Vite (khác Create React App dùng tiền tố `REACT_APP_`).
+ 
+---
 
 ### Backend
 
@@ -479,7 +518,6 @@ Frontend chạy tại `http://localhost:5173`, Backend tại `http://localhost:3
 - [React Documentation](https://react.dev)
 - [TanStack Query Documentation](https://tanstack.com/query/latest)
 - [TypeORM Documentation](https://typeorm.io)
-- Slide bài giảng môn Thiết kế Web Nâng cao — Giảng viên hướng dẫn
 
 ---
 
