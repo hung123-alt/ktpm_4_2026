@@ -438,10 +438,10 @@ Trước khi chạy, cần tạo file server/`.env` cho **cả Backend và Front
  
 ```env
 # Kết nối Database (MySQL trên Aiven Cloud)
-DB_HOST=mysql-webphim-loct63636-960f.c.aivencloud.com
-DB_PORT=16014
-DB_USERNAME=avnadmin
-DB_PASSWORD=<mật khẩu Aiven được cấp> 
+DB_HOST=mysql-
+DB_PORT=
+DB_USERNAME=
+DB_PASSWORD=
 DB_NAME=defaultdb
 DB_SSL_CA=./ca.pem
  
